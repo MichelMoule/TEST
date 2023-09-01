@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFT Marketplace</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+</head>
+<body>
+  <header>
+    <img src="logo.png" alt="Logo du NFT Marketplace">
+    <h1>NFT Marketplace</h1>
+  </header>
+  <main>
+    <div class="filter-section" id="filter">
+    </div>
+    <div class="nft-listing" id="nft-listing">
+        <div class="nft-header">
+            <div class="header-item">Nom</div>
+            <div class="header-item">Collection</div>
+            <div class="header-item">Prix moyen</div>
+        </div>
+    </div>
+  </main>
+  <footer>
+    <p>&copy; 2023 NFT Marketplace</p>
+  </footer>
+  <script>
+    // Function to fetch and display NFT data from a CSV file
+// Function to fetch and display NFT data from a CSV file
+// Function to fetch and display NFT data from a CSV file
+// Function to fetch and display NFT data from a CSV file
+async function fetchNFTData() {
+  try {
+    const response = await fetch('nft_data.csv');
+    const csvData = await response.text();
+    const parsedData = Papa.parse(csvData, { header: true });
+
+    // Group items by title
+    const groupedData = {};
+    parsedData.data.forEach(item => {
+      const title = item['Title'];
+      if (!groupedData[title]) {
+        groupedData[title] = [];
+      }
+      groupedData[title].push(item);
+    });
+
+    const nftListing = document.getElementById('nft-listing');
+
+    // Create NFT cards for each title
+    Object.keys(groupedData).forEach(title => {
+      const titleNFTs = groupedData[title];
+    
+      // Calculate average price for this title
+      const totalPrices = titleNFTs.reduce((sum, item) => {
+        return sum + (item['Price'] ? parseFloat(item['Price'].replace(/ᕫ\s*/, '')) : 0);
+      }, 0);
+      const averagePrice = totalPrices / titleNFTs.length;
+    
+      // Create a container for the title card and its price list
+      const container = document.createElement('div');
+      container.classList.add('nft-container');
+      container.setAttribute('data-collection', titleNFTs[0]['Collection Name']);
+
+    
+      const titleCard = document.createElement('article');
+      titleCard.classList.add('nft-card');
+    
+      const img = document.createElement('img');
+      img.src = titleNFTs[0]['Image URL']; // Use the first image URL in the group
+      img.alt = title;
+      img.width = 100;
+      img.height = 100;
+      titleCard.appendChild(img);
+    
+      const nftContent = document.createElement('div');
+      nftContent.classList.add('nft-content');
+    
+      const titleHeading = document.createElement('h3');
+      titleHeading.textContent = title;
+      titleHeading.classList.add('nft-title'); // Add class for title
+      nftContent.appendChild(titleHeading);
+    
+      const collectionInfo = document.createElement('p');
+      collectionInfo.textContent = ` ${titleNFTs[0]['Collection Name']}`;
+      collectionInfo.classList.add('nft-collection'); // Add class for collection
+      nftContent.appendChild(collectionInfo);
+
+      const averagePriceInfo = document.createElement('p');
+      averagePriceInfo.textContent = `  ${averagePrice.toFixed(2)} ᕫ`;
+      averagePriceInfo.classList.add('nft-average-price'); // Add class for styling
+      nftContent.appendChild(averagePriceInfo);
+      const priceList = document.createElement('div');
+      priceList.classList.add('price-card', 'hidden');
+      
+      titleCard.appendChild(nftContent);
+      
+      titleNFTs.forEach(item => {
+        const priceCard = document.createElement('div');
+        priceCard.classList.add('price-card-item');
+      
+        const listItem = document.createElement('p');
+        if (item && item['Price']) {
+          listItem.textContent = `${parseFloat(item['Price'].replace(/ᕫ\s*/, '')).toFixed(2)} ᕫ`;
+          priceCard.appendChild(listItem);
+        } else {
+          console.warn("Item or Item['Price'] is undefined", item);
+          // Vous pouvez aussi gérer cette situation d'une autre manière si nécessaire
+        }
+        priceCard.appendChild(listItem);
+      
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('button-container');
+      
+        const buyButton = document.createElement('button');
+        buyButton.textContent = 'Acheter';
+        buttonContainer.appendChild(buyButton);
+      
+        const offerButton = document.createElement('button');
+        offerButton.textContent = 'Faire une offre';
+        buttonContainer.appendChild(offerButton);
+      
+        priceCard.appendChild(buttonContainer);
+      
+        priceList.appendChild(priceCard);
+      });
+      
+      
+        // Append the price card below the current title card
+        container.appendChild(titleCard);
+        container.appendChild(priceList);
+
+      
+        // Toggle visibility of price card on click
+        titleCard.addEventListener('click', () => {
+          if (priceList.style.display === 'none' || !priceList.style.display) {
+            priceList.style.display = 'block';
+          } else {
+            priceList.style.display = 'none';
+          }
+        });
+      
+        nftListing.appendChild(container);
+
+      });
+      
+      const collectionFilters = document.getElementById('filter');
+      collectionFilters.innerHTML = ''; // Vide le conteneur de filtres
+
+
+      const collections = new Set();
+
+parsedData.data.forEach(item => {
+  collections.add(item['Collection Name']);
+});
+
+collections.forEach(collection => {
+  const button = document.createElement('button');
+  button.textContent = collection;
+  button.classList.add('filter-button');
+  button.addEventListener('click', () => filterByCollection(collection));
+  collectionFilters.appendChild(button);
+});
+
+// Ajout d'un bouton pour réinitialiser le filtre
+const resetButton = document.createElement('button');
+resetButton.textContent = 'Tout afficher';
+resetButton.classList.add('filter-button', 'reset-button');
+resetButton.addEventListener('click', () => fetchNFTData());
+collectionFilters.appendChild(resetButton);
+    } catch (error) {
+      console.error('Error fetching NFT data:', error);
+    }
+  }
+  
+  // Load NFT data when the DOM content is loaded
+  document.addEventListener('DOMContentLoaded', fetchNFTData);
+  
+function filterByCollection(collection) {
+    // Cache tous les éléments
+    document.querySelectorAll('.nft-container').forEach(el => {
+      el.style.display = 'none';
+    });
+    
+    // Affiche seulement ceux qui correspondent au filtre
+    document.querySelectorAll(`[data-collection="${collection}"]`).forEach(el => {
+      el.style.display = 'block';
+    });
+  }
+  
+  </script>
+
